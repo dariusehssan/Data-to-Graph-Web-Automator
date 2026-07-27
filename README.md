@@ -1,5 +1,3 @@
-# Raw-data-Graph-Automator
-
 # 📊 Data-to-Graph Web Automator
 
 ![WIP](https://img.shields.io/badge/Status-Work%20in%20Progress-yellow)
