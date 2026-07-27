@@ -19,8 +19,7 @@ Building a web interface from scratch has brought plenty of learning curves and 
 
 ## 🚀 Current Status & Roadmap
 * [x] Project architecture and initial setup
-
-🔄 Raw data parsing and processing
+* [Currently Working on] Raw data parsing and processing
 * [ ] Automated graph generation logic
 * [ ] User interface and dashboard refinement
 
