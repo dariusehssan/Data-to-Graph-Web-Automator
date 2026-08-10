@@ -177,21 +177,17 @@ def generate_graph():
         xlabel_text = x_column
         ylabel_text = "Values"
 
-    # Fetch all raw data points ordered by RowIndex
     df_raw = pd.read_sql("SELECT RowIndex, ColumnName, Value FROM RawGraphData ORDER BY RowIndex", conn)
     conn.close()
 
     if df_raw.empty:
         return jsonify({"error": "No data found in database."}), 400
 
-    # PIVOT THE TABLE: Turns vertical column entries into actual wide columns
     df = df_raw.pivot(index="RowIndex", columns="ColumnName", values="Value")
 
-    # Ensure y_columns is a list
     if isinstance(y_columns, str): 
         y_columns = [y_columns]
 
-    # Verify requested columns exist in the pivoted dataframe
     missing_cols = [col for col in y_columns + [x_column] if col not in df.columns]
     if missing_cols:
         return jsonify({"error": f"Missing columns in data: {missing_cols}"}), 400
@@ -199,7 +195,6 @@ def generate_graph():
     fig, ax = plt.subplots(figsize=(8, 5))
 
     for y_col in y_columns:
-        # Convert values to numeric type for proper plotting (in case they were stored as text strings)
         x_vals = df[x_column]
         y_vals = pd.to_numeric(df[y_col], errors='coerce')
         
