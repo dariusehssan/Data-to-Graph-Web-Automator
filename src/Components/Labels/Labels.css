@@ -1,0 +1,85 @@
+.label-list-container {
+    margin-top: 20px;
+}
+
+.selected-row {
+    background-color: #1e293b !important;
+}
+
+.action-btn {
+    padding: 5px 10px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+}
+
+.btn-use {
+    background-color: #2563eb;
+}
+
+    .btn-use:hover {
+        background-color: #1d4ed8;
+    }
+
+.btn-selected {
+    background-color: #16a34a;
+}
+
+.btn-update {
+    background-color: #ca8a04;
+}
+
+    .btn-update:hover {
+        background-color: #a16207;
+    }
+
+.btn-delete {
+    background-color: #dc2626;
+}
+
+    .btn-delete:hover {
+        background-color: #b91c1c;
+    }
+
+.create-preset-btn {
+    margin-top: 15px;
+    padding: 8px 15px;
+    background-color: #475569;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+    .create-preset-btn:hover {
+        background-color: #334155;
+    }
+
+.label-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+    .form-group input {
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #cbd5e1;
+    }
+
+.submit-btn {
+    padding: 10px;
+    background-color: #16a34a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
