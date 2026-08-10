@@ -3,7 +3,9 @@ from flask_cors import CORS
 import pyodbc
 import pandas as pd
 import uuid
-from datetime import datetime, timedelta
+import io
+import base64
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 CORS(app)
@@ -11,7 +13,7 @@ CORS(app)
 def get_db_connection():
     conn_str = (
         r'DRIVER={ODBC Driver 17 for SQL Server};'
-        r'SERVER=DESKTOP-1ABH03L\SQLEXPRESS;'
+        r'SERVER=DESKTOP-1ABH03L\SQLEXPRESS;' #r'SERVER=DESKTOP-1ABH03L\SQLEXPRESS;''SERVER=(localdb)\MSSQLLocalDB;'
         r'DATABASE=GraphProjectDB;'
         r'Trusted_Connection=yes;'
     )
@@ -89,19 +91,15 @@ def upload_data():
     try:
         upload_id = uuid.uuid4()
         
+        cursor.execute("DELETE FROM RawGraphData")
+
         for index, row in df.iterrows():
             for col_name in df.columns:
                 cursor.execute("""
                     INSERT INTO RawGraphData (UploadID, RowIndex, ColumnName, Value)
                     VALUES (?, ?, ?, ?)
                 """, (str(upload_id), index, col_name, str(row[col_name])))
-                
-        expiration_time = datetime.now() - timedelta(minutes=15)
-
-        cursor.execute("""
-             DELETE FROM RawGraphData 
-             WHERE CreatedAt < ?
-             """, (expiration_time,))
+        
         conn.commit()
         return jsonify({"message": "CSV data successfully saved!", "upload_id": str(upload_id)}), 201
         
@@ -110,6 +108,117 @@ def upload_data():
         return jsonify({"message": f"Error: {str(e)}"}), 500
     finally:
         conn.close()
+
+@app.route("/csv_table", methods=["GET"])
+def csv_table():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT DISTINCT ColumnName FROM RawGraphData")
+    
+    columns = [row[0] for row in cursor.fetchall()]
+
+    conn.close()
+
+    return jsonify({
+        "columns": columns
+    }), 200
+
+@app.route("/rename_column", methods=["PUT"])
+def rename_column():
+    data = request.get_json()
+    old_name = data.get("old_name")
+    new_name = data.get("new_name")
+    
+    if not old_name or not new_name:
+        return jsonify({"error": "Both old_name and new_name are required"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        query = f"EXEC sp_rename 'RawGraphData.{old_name}', '{new_name}', 'COLUMN'"
+        cursor.execute(query)
+        conn.commit()
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+
+    conn.close()
+
+    return jsonify({
+        "message": f"Column '{old_name}' successfully renamed to '{new_name}'!"
+    }), 200
+
+@app.route("/generate_graph", methods=["POST"])
+def generate_graph():
+    data = request.get_json()
+    x_column = data.get("x_column")
+    y_columns = data.get("y_columns")
+    preset_id = data.get("preset_id")
+
+    if not x_column or not y_columns:
+        return jsonify({"error": "Please select both X and Y axes columns."}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT xlabel, xunit, ylabel, yunit 
+        FROM GraphPresets 
+        WHERE id = ?
+    """, (preset_id,))
+    preset = cursor.fetchone()
+
+    if preset:
+        xlabel_text = f"{preset[0]} / {preset[1]}"
+        ylabel_text = f"{preset[2]} / {preset[3]}"
+    else:
+        xlabel_text = x_column
+        ylabel_text = "Values"
+
+    # Fetch all raw data points ordered by RowIndex
+    df_raw = pd.read_sql("SELECT RowIndex, ColumnName, Value FROM RawGraphData ORDER BY RowIndex", conn)
+    conn.close()
+
+    if df_raw.empty:
+        return jsonify({"error": "No data found in database."}), 400
+
+    # PIVOT THE TABLE: Turns vertical column entries into actual wide columns
+    df = df_raw.pivot(index="RowIndex", columns="ColumnName", values="Value")
+
+    # Ensure y_columns is a list
+    if isinstance(y_columns, str): 
+        y_columns = [y_columns]
+
+    # Verify requested columns exist in the pivoted dataframe
+    missing_cols = [col for col in y_columns + [x_column] if col not in df.columns]
+    if missing_cols:
+        return jsonify({"error": f"Missing columns in data: {missing_cols}"}), 400
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    for y_col in y_columns:
+        # Convert values to numeric type for proper plotting (in case they were stored as text strings)
+        x_vals = df[x_column]
+        y_vals = pd.to_numeric(df[y_col], errors='coerce')
+        
+        ax.plot(x_vals, y_vals, label=y_col, marker='o', markersize=3)
+
+    ax.set_xlabel(xlabel_text)
+    ax.set_ylabel(ylabel_text)
+    ax.legend()
+    ax.grid(True)
+
+    img_io = io.BytesIO()
+    plt.savefig(img_io, format='png', bbox_inches='tight')
+    img_io.seek(0)
+    plot_url = base64.b64encode(img_io.getvalue()).decode('utf8')
+    plt.close(fig)
+
+    return jsonify({
+        "plot": f"data:image/png;base64,{plot_url}"
+    }), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
