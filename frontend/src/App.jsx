@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import LabelList from "./components/Labels/LabelList";
-import LabelForm from "./components/Labels/LabelForm";
-import CSVUpload from "./components/CSVUpload/CSVUpload";
-import GraphTable from "./components/GraphTable/GraphTable";
-import GraphGenerator from "./components/GraphGenerator/GraphGenerator";
+import LabelList from "./LabelList";
+import LabelForm from "./LabelForm";
+import CSVUpload from "./CSVUpload";
+import GraphTable from "./GraphTable";
+import GraphGenerator from "./GraphGenerator";
 import "./App.css";
 
 const API_URL = import.meta.env.REACT_APP_API_URL || "http://127.0.0.1:5000";
