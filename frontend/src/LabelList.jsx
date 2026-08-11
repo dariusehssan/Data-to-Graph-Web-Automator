@@ -1,7 +1,7 @@
 import React from "react";
 import "./Labels.css";
 
-const API_URL = import.meta.env.REACT_APP_API_URL || "http://127.0.0.1:5000";
+const API_URL = import.meta.env.VITE_API_URL || "https://data-to-graph-web-automator.onrender.com";
 
 const LabelList = ({ labels, updateLabel, updateCallback, selectedPresetId, setSelectedPresetId }) => {
     const onDelete = async (id) => {
