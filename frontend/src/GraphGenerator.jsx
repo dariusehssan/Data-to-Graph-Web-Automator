@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import "./GraphGenerator.css";
 
-const API_URL = import.meta.env.REACT_APP_API_URL || "http://127.0.0.1:5000";
+const API_URL = import.meta.env.VITE_API_URL || "https://data-to-graph-web-automator.onrender.com";
 
 const GraphGenerator = ({ selectedXAxis, selectedYAxis, selectedPresetId }) => {
     const [plotUrl, setPlotUrl] = useState("");
