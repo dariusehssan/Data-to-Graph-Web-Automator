@@ -13,10 +13,14 @@ CORS(app)
 
 def get_db_connection():
     conn_str = (
-        r'DRIVER={ODBC Driver 17 for SQL Server};'
-        r'SERVER=DESKTOP-1ABH03L\SQLEXPRESS;' #r'SERVER=DESKTOP-1ABH03L\SQLEXPRESS;''SERVER=(localdb)\MSSQLLocalDB;'
-        r'DATABASE=GraphProjectDB;'
-        r'Trusted_Connection=yes;'
+        "Driver={ODBC Driver 18 for SQL Server};"
+        "Server=tcp:dariusehssan1.database.windows.net,1433;"
+        "Database=datatograph_db;"
+        "Uid=dariusehssan;"
+        "Pwd=DariusDataGraph!;"
+        "Encrypt=yes;"
+        "TrustServerCertificate=no;"
+        "Connection Timeout=30;"
     )
     return pyodbc.connect(conn_str)
 
