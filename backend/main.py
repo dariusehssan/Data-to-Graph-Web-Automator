@@ -11,6 +11,10 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+@app.route("/", methods=["GET"])
+def home():
+    return {"status": "Backend is running successfully!"}
+
 def get_db_connection():
     conn_str = (
         "Driver={ODBC Driver 18 for SQL Server};"
