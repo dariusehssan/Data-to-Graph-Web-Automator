@@ -1,7 +1,5 @@
 # 📊 Data-to-Graph Web Automator
 
-![WIP](https://img.shields.io/badge/Status-Work%20in%20Progress-yellow)
-
 This project started at the beginning of this year with a simple goal: create a Python script to automate the generation of graphs from raw data.
 
 While the console-based Python script worked, it had limitations. Running everything through a command-line interface meant input questions were rigid, data couldn't easily persist, and saving custom graph options from previous runs was difficult. More importantly, I wanted a solution that others could easily use themselves, without having to run code locally or dig through source files.
@@ -14,3 +12,8 @@ Building a web interface from scratch has brought plenty of learning curves and 
 * **Frontend:** JavaScript, HTML, CSS
 * **Backend/Processing:** Python
 * **Data Management:** SQL
+
+## Website Architecture Overview
+* **Frontend:** Vercel
+* **Backend:** Render
+* **Database:** Azure SQL Database
