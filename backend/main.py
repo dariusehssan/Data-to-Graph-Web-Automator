@@ -90,7 +90,7 @@ def upload_data():
         return jsonify({"message": "No file uploaded"}), 400
     
     file = request.files['file']
-    df = pd.read_csv(file, sep=';')
+    df = pd.read_csv(file, sep=r'[,;]', engine='python')
     
     df.columns = df.columns.str.strip().str.replace(' ', '_').str.replace(r'[()]', '', regex=True)
     
