@@ -9,7 +9,6 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
     const [loading, setLoading] = useState(true);
     const [editingCol, setEditingCol] = useState(null);
     const [tempName, setTempName] = useState("");
-    const [columnAliases, setColumnAliases] = useState({});
 
     useEffect(() => {
         axios.get(`${API_URL}/csv_table`)
@@ -25,32 +24,28 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
 
     const handleStartEdit = (colName) => {
         setEditingCol(colName);
-        const currentDisplay = columnAliases[colName] || (colName.startsWith("val_") ? colName.slice(4) : colName);
-        setTempName(currentDisplay);
+        setTempName(colName);
     };
 
     const handleSaveRename = async (oldName) => {
-        if (!tempName.trim()) {
+        if (!tempName.trim() || tempName.trim() === oldName) {
             setEditingCol(null);
             return;
         }
 
-        const desiredName = tempName.trim();
+        const newNameTrimmed = tempName.trim();
 
         try {
-            const response = await axios.put(`${API_URL}/rename_column`, {
+            await axios.put(`${API_URL}/rename_column`, {
                 old_name: oldName,
-                new_name: desiredName
+                new_name: newNameTrimmed
             });
 
-            const savedDbName = response.data.saved_name;
+            // Update columns state array directly with the clean name
+            setColumns((prev) => prev.map(c => c === oldName ? newNameTrimmed : c));
 
-            setColumnAliases((prev) => ({ ...prev, [savedDbName]: desiredName }));
-
-            setColumns((prev) => prev.map(c => c === oldName ? savedDbName : c));
-
-            if (selectedXAxis === oldName) setSelectedXAxis(savedDbName);
-            setSelectedYAxis((prev) => prev.map(y => y === oldName ? savedDbName : y));
+            if (selectedXAxis === oldName) setSelectedXAxis(newNameTrimmed);
+            setSelectedYAxis((prev) => prev.map(y => y === oldName ? newNameTrimmed : y));
 
             setEditingCol(null);
         } catch (err) {
@@ -60,14 +55,6 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
         }
     };
 
-    const displayColumnName = (name) => {
-        if (!name) return "";
-        if (columnAliases[name]) {
-            return columnAliases[name];
-        }
-        return name.startsWith("val_") ? name.slice(4) : name;
-    };
-    
     const handleYAxisChange = (colName) => {
         setSelectedYAxis((prevSelected) => {
             if (prevSelected.includes(colName)) {
@@ -118,7 +105,7 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
                                         onClick={() => handleStartEdit(colName)} 
                                         title="Click to rename"
                                     >
-                                        {displayColumnName(colName)} ✏️
+                                        {colName} ✏️
                                     </span>
                                 )}
                             </td>
@@ -144,8 +131,8 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
                 </tbody>
             </table>
             <div className="selection-summary">
-                <p><strong>Selected X-Axis:</strong> {displayColumnName(selectedXAxis) || "None"}</p>
-                <p><strong>Selected Y-Axis:</strong> {selectedYAxis.map(col => displayColumnName(col)).join(", ") || "None"}</p>
+                <p><strong>Selected X-Axis:</strong> {selectedXAxis || "None"}</p>
+                <p><strong>Selected Y-Axis:</strong> {selectedYAxis.join(", ") || "None"}</p>
             </div>
         </div>
     );
