@@ -58,7 +58,7 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
                     {columns.map((colName, index) => (
                         <tr key={index}>
                             <td>{index + 1}</td>
-                            <td>{colName}</td>
+                            <td>{formatColumnName(colName)}</td>
                             <td className="center-align">
                                 <input
                                     type="radio"
