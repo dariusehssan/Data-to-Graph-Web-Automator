@@ -20,14 +20,34 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
             });
     }, []);
 
-    const formatColumnName = (colName) => {
-        return colName
-            .replace(/_/g, " ")
-            .replace(/\b([a-zA-Z0-9\/^*+_]+)\b/g, (match) => {
-                const lower = match.toLowerCase();
-                if (lower === "at" || lower === "by" || lower === "of") return match;
-                return match;
+    const handleStartEdit = (colName) => {
+        setEditingCol(colName);
+        setTempName(colName);
+    };
+
+    const handleSaveRename = async (oldName) => {
+        if (!tempName.trim() || tempName === oldName) {
+            setEditingCol(null);
+            return;
+        }
+
+        try {
+            await axios.put(`${API_URL}/rename_column`, {
+                old_name: oldName,
+                new_name: tempName.trim()
             });
+
+            setColumns((prev) => prev.map(c => c === oldName ? tempName.trim() : c));
+
+            if (selectedXAxis === oldName) setSelectedXAxis(tempName.trim());
+            setSelectedYAxis((prev) => prev.map(y => y === oldName ? tempName.trim() : y));
+
+            setEditingCol(null);
+        } catch (err) {
+            console.error("Error renaming column:", err);
+            alert(err.response?.data?.error || "Failed to rename column.");
+            setEditingCol(null);
+        }
     };
     
     const handleYAxisChange = (colName) => {
@@ -45,6 +65,8 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
     return (
         <div className="graph-table-container">
             <h3>Raw Data Table Structure</h3>
+            <p className="rename-hint">
+                💡 <em>Click any database column name below to rename it inline.</em>
             <table className="data-table">
                 <thead>
                     <tr>
@@ -58,7 +80,29 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
                     {columns.map((colName, index) => (
                         <tr key={index}>
                             <td>{index + 1}</td>
-                            <td>{formatColumnName(colName)}</td>
+                            <td>
+                                {editingCol === colName ? (
+                                    <div className="edit-container">
+                                        <input
+                                            type="text"
+                                            className="rename-input"
+                                            value={tempName}
+                                            onChange={(e) => setTempName(e.target.value)}
+                                            autoFocus
+                                        />
+                                        <button className="rename-btn save-btn" onClick={() => handleSaveRename(colName)}>Save</button>
+                                        <button className="rename-btn cancel-btn" onClick={() => setEditingCol(null)}>Cancel</button>
+                                    </div>
+                                ) : (
+                                    <span 
+                                        className="editable-column-name"
+                                        onClick={() => handleStartEdit(colName)} 
+                                        title="Click to rename"
+                                    >
+                                        {colName} ✏️
+                                    </span>
+                                )}
+                            </td>
                             <td className="center-align">
                                 <input
                                     type="radio"
