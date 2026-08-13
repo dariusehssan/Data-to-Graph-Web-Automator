@@ -25,7 +25,7 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
     const handleStartEdit = (colName) => {
         setEditingCol(colName);
         const cleanName = colName.startsWith("_") && !isNaN(colName.charAt(1))? colName.slice(1) : colName;
-        setTempName(colName);
+        setTempName(cleanName);
     };
 
     const handleSaveRename = async (oldName) => {
