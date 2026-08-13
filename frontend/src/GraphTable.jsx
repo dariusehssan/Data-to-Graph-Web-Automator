@@ -24,6 +24,7 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
 
     const handleStartEdit = (colName) => {
         setEditingCol(colName);
+        const cleanName = colName.startsWith("_") && !isNaN(colName.charAt(1))? colName.slice(1) : colName;
         setTempName(colName);
     };
 
@@ -50,6 +51,11 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
             alert(err.response?.data?.error || "Failed to rename column.");
             setEditingCol(null);
         }
+    };
+
+    const displayColumnName = (name) => {
+        if (!name) return "";
+        return name.startsWith("_") && !isNaN(name.charAt(1)) ? name.slice(1) : name;
     };
     
     const handleYAxisChange = (colName) => {
@@ -102,7 +108,7 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
                                         onClick={() => handleStartEdit(colName)} 
                                         title="Click to rename"
                                     >
-                                        {colName} ✏️
+                                        {displayColumnName(colName)} ✏️
                                     </span>
                                 )}
                             </td>
