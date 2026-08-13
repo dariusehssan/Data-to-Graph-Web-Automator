@@ -9,6 +9,7 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
     const [loading, setLoading] = useState(true);
     const [editingCol, setEditingCol] = useState(null);
     const [tempName, setTempName] = useState("");
+    const [columnAliases, setColumnAliases] = useState({});
 
     useEffect(() => {
         axios.get(`${API_URL}/csv_table`)
@@ -25,14 +26,16 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
     const handleStartEdit = (colName) => {
         setEditingCol(colName);
         const currentDisplay = columnAliases[colName] || (colName.startsWith("val_") ? colName.slice(4) : colName);
-        setTempName(cleanName);
+        setTempName(currentDisplay);
     };
 
     const handleSaveRename = async (oldName) => {
-        if (!tempName.trim() || tempName === oldName) {
+        if (!tempName.trim()) {
             setEditingCol(null);
             return;
         }
+
+        const desiredName = tempName.trim();
 
         try {
             const response = await axios.put(`${API_URL}/rename_column`, {
