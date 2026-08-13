@@ -93,7 +93,6 @@ def upload_data():
     
     df = pd.read_csv(file, sep=r'[,;]', engine='python')
     df.columns = df.columns.str.strip().str.replace(' ', '_').str.replace(r'[()]', '', regex=True)
-    df.columns = [f"Col_{col}" if col[0].isdigit() else col for col in df.columns]
     
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -143,6 +142,8 @@ def rename_column():
     if not old_name or not new_name:
         return jsonify({"error": "Both old_name and new_name are required"}), 400
 
+    db_name = f"_{new_name}" if new_name[0].isdigit() else new_name
+    
     conn = get_db_connection()
     cursor = conn.cursor()
 
