@@ -24,7 +24,7 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
 
     const handleStartEdit = (colName) => {
         setEditingCol(colName);
-        const cleanName = colName.startsWith("_") && !isNaN(colName.charAt(1))? colName.slice(1) : colName;
+        const currentDisplay = columnAliases[colName] || (colName.startsWith("val_") ? colName.slice(4) : colName);
         setTempName(cleanName);
     };
 
@@ -35,15 +35,19 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
         }
 
         try {
-            await axios.put(`${API_URL}/rename_column`, {
+            const response = await axios.put(`${API_URL}/rename_column`, {
                 old_name: oldName,
-                new_name: tempName.trim()
+                new_name: desiredName
             });
 
-            setColumns((prev) => prev.map(c => c === oldName ? tempName.trim() : c));
+            const savedDbName = response.data.saved_name;
 
-            if (selectedXAxis === oldName) setSelectedXAxis(tempName.trim());
-            setSelectedYAxis((prev) => prev.map(y => y === oldName ? tempName.trim() : y));
+            setColumnAliases((prev) => ({ ...prev, [savedDbName]: desiredName }));
+
+            setColumns((prev) => prev.map(c => c === oldName ? savedDbName : c));
+
+            if (selectedXAxis === oldName) setSelectedXAxis(savedDbName);
+            setSelectedYAxis((prev) => prev.map(y => y === oldName ? savedDbName : y));
 
             setEditingCol(null);
         } catch (err) {
@@ -55,7 +59,10 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
 
     const displayColumnName = (name) => {
         if (!name) return "";
-        return name.startsWith("_") && !isNaN(name.charAt(1)) ? name.slice(1) : name;
+        if (columnAliases[name]) {
+            return columnAliases[name];
+        }
+        return name.startsWith("val_") ? name.slice(4) : name;
     };
     
     const handleYAxisChange = (colName) => {
@@ -134,8 +141,8 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
                 </tbody>
             </table>
             <div className="selection-summary">
-                <p><strong>Selected X-Axis:</strong> {selectedXAxis || "None"}</p>
-                <p><strong>Selected Y-Axis:</strong> {selectedYAxis.join(", ") || "None"}</p>
+                <p><strong>Selected X-Axis:</strong> {displayColumnName(selectedXAxis) || "None"}</p>
+                <p><strong>Selected Y-Axis:</strong> {selectedYAxis.map(col => displayColumnName(col)).join(", ") || "None"}</p>
             </div>
         </div>
     );
