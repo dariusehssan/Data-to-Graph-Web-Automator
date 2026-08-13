@@ -146,7 +146,7 @@ def rename_column():
     cursor = conn.cursor()
 
     try:
-        query = f"EXEC sp_rename 'RawGraphData.{old_name}', '{new_name}', 'COLUMN'"
+        query = f"EXEC sp_rename 'RawGraphData.[{old_name}]', '{new_name}', 'COLUMN'"
         cursor.execute(query)
         conn.commit()
     except Exception as e:
