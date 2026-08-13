@@ -7,6 +7,8 @@ const API_URL = import.meta.env.VITE_API_URL || "https://data-to-graph-web-autom
 const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelectedYAxis }) => {
     const [columns, setColumns] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [editingCol, setEditingCol] = useState(null);
+    const [tempName, setTempName] = useState("");
 
     useEffect(() => {
         axios.get(`${API_URL}/csv_table`)
