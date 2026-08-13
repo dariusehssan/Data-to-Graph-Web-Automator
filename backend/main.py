@@ -124,7 +124,6 @@ def csv_table():
     cursor = conn.cursor()
     
     cursor.execute("SELECT DISTINCT ColumnName FROM RawGraphData")
-    
     columns = [row[0] for row in cursor.fetchall()]
 
     conn.close()
@@ -142,14 +141,16 @@ def rename_column():
     if not old_name or not new_name:
         return jsonify({"error": "Both old_name and new_name are required"}), 400
 
-    db_name = f"val_{new_name}" if new_name[0].isdigit() else new_name
-    
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        query = f"EXEC sp_rename 'RawGraphData.[{old_name}]', '{db_name}', 'COLUMN'"
-        cursor.execute(query)
+        cursor.execute("""
+            UPDATE RawGraphData 
+            SET ColumnName = ? 
+            WHERE ColumnName = ?
+        """, (new_name, old_name))
+        
         conn.commit()
     except Exception as e:
         conn.close()
@@ -159,7 +160,7 @@ def rename_column():
 
     return jsonify({
         "message": f"Column successfully renamed!",
-        "saved_name": db_name
+        "saved_name": new_name
     }), 200
 
 
@@ -187,7 +188,7 @@ def generate_graph():
         xlabel_text = f"{preset[0]} / {preset[1]}"
         ylabel_text = f"{preset[2]} / {preset[3]}"
     else:
-        xlabel_text = x_column[4:] if x_column.startswith("val_") else x_column
+        xlabel_text = x_column
         ylabel_text = "Values"
 
     df_raw = pd.read_sql("SELECT RowIndex, ColumnName, Value FROM RawGraphData ORDER BY RowIndex", conn)
@@ -211,9 +212,7 @@ def generate_graph():
         x_vals = df[x_column]
         y_vals = pd.to_numeric(df[y_col], errors='coerce')
         
-        legend_label = y_col[4:] if y_col.startswith("val_") else y_col
-        
-        ax.plot(x_vals, y_vals, label=legend_label, marker='o', markersize=3)
+        ax.plot(x_vals, y_vals, label=y_col, marker='o', markersize=3)
 
     ax.set_xlabel(xlabel_text)
     ax.set_ylabel(ylabel_text)
