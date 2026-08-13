@@ -133,32 +133,6 @@ def csv_table():
         "columns": columns
     }), 200
 
-@app.route("/rename_column", methods=["PUT"])
-def rename_column():
-    data = request.get_json()
-    old_name = data.get("old_name")
-    new_name = data.get("new_name")
-    
-    if not old_name or not new_name:
-        return jsonify({"error": "Both old_name and new_name are required"}), 400
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        query = f"EXEC sp_rename 'RawGraphData.{old_name}', '{new_name}', 'COLUMN'"
-        cursor.execute(query)
-        conn.commit()
-    except Exception as e:
-        conn.close()
-        return jsonify({"error": str(e)}), 500
-
-    conn.close()
-
-    return jsonify({
-        "message": f"Column '{old_name}' successfully renamed to '{new_name}'!"
-    }), 200
-
 @app.route("/generate_graph", methods=["POST"])
 def generate_graph():
     data = request.get_json()
