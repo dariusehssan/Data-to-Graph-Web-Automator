@@ -4,7 +4,6 @@ import LabelForm from "./LabelForm";
 import CSVUpload from "./CSVUpload";
 import GraphTable from "./GraphTable";
 import GraphGenerator from "./GraphGenerator";
-import GraphRename from "./GraphRename";
 import "./App.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://data-to-graph-web-automator.onrender.com";
@@ -57,8 +56,6 @@ function App() {
             <h1>Graphing Automator</h1>
 
             <CSVUpload uploadCallback={handleRefresh} />
-
-            <GraphRename key={refreshKey} />
             
             <GraphTable
                 key={refreshKey}
