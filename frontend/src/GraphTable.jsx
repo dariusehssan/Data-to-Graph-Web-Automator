@@ -20,6 +20,16 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
             });
     }, []);
 
+    const formatColumnName = (colName) => {
+        return colName
+            .replace(/_/g, " ")
+            .replace(/\b([a-zA-Z0-9\/^*+_]+)\b/g, (match) => {
+                const lower = match.toLowerCase();
+                if (lower === "at" || lower === "by" || lower === "of") return match;
+                return match;
+            });
+    };
+    
     const handleYAxisChange = (colName) => {
         setSelectedYAxis((prevSelected) => {
             if (prevSelected.includes(colName)) {
