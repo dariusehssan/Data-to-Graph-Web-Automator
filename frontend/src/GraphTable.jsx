@@ -67,6 +67,7 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
             <h3>Raw Data Table Structure</h3>
             <p className="rename-hint">
                 💡 <em>Click any database column name below to rename it inline.</em>
+            </p>
             <table className="data-table">
                 <thead>
                     <tr>
