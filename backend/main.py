@@ -93,6 +93,7 @@ def upload_data():
     df = pd.read_csv(file, sep=r'[,;]', engine='python')
     
     df.columns = df.columns.str.strip().str.replace(' ', '_').str.replace(r'[()]', '', regex=True)
+    df.columns = [f"_{col}" if col[0].isdigit() else col for col in df.columns]
     
     conn = get_db_connection()
     cursor = conn.cursor()
