@@ -4,7 +4,7 @@ import LabelForm from "./LabelForm";
 import CSVUpload from "./CSVUpload";
 import GraphTable from "./GraphTable";
 import GraphGenerator from "./GraphGenerator";
-import GraphRename from "./Components/GraphTable/GraphRename";
+import GraphRename from "./GraphRename";
 import "./App.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://data-to-graph-web-automator.onrender.com";
