@@ -17,3 +17,9 @@ Building a web interface from scratch has brought plenty of learning curves and 
 * **Frontend:** Vercel
 * **Backend:** Render
 * **Database:** Azure SQL Database
+
+For an in-depth look at how this project was built, please refer to the detailed markdown guides included in this repository:
+
+*   **[Frontend Architecture](./Guides/Frontend-Architecture.md)**
+*   **[Backend Architecture & Database](./Guides/Backend-Architecture.md)**
+*   **[Web Deployment Setup](./Guides/Web-Deployment-Setup.md)**
