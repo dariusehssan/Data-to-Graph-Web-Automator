@@ -1,10 +1,10 @@
-# ⚙️ Backend Architecture & API Reference
+# Backend Architecture & API Reference
 
 This document provides a comprehensive breakdown of the Python/Flask backend for the Data-to-Graph Web Automator. It explains how the backend communicates with the frontend, how it securely connects to the Azure SQL database, and details the functionality of every API route.
 
 ---
 
-## 🔌 1. Connecting the Backend to the Frontend & The Role of JSON
+## 1. Connecting the Backend to the Frontend & The Role of JSON
 
 The frontend (JavaScript/HTML/CSS) and backend (Python/Flask) operate in separate environments. We bridge this gap using standard web protocols:
 
@@ -13,7 +13,7 @@ The frontend (JavaScript/HTML/CSS) and backend (Python/Flask) operate in separat
 
 ---
 
-## 🗄️ 2. Connecting to Azure SQL Database (`pyodbc`)
+## 2. Connecting to Azure SQL Database (`pyodbc`)
 
 To interact with the Azure SQL database, the backend utilizes the **`pyodbc`** library.
 
@@ -22,34 +22,34 @@ To interact with the Azure SQL database, the backend utilizes the **`pyodbc`** l
 
 ---
 
-## 🛣️ 3. API Route Breakdown
+## 3. API Route Breakdown
 
-### 🟢 A. Health Check
+### A. Health Check
 * **Route:** `GET /`
 * **Libraries Used:** `Flask`
 * **Functionality:** Acts as a simple heartbeat monitor. Visiting the root backend URL instantly returns a JSON payload confirming the server is online and running successfully.
 
-### 🏷️ B. Fetching Label Presets
+### B. Fetching Label Presets
 * **Route:** `GET /labels`
 * **Libraries Used:** `Flask`, `pyodbc`
 * **Functionality:** Queries the database using a stored procedure (`[dbo].[GetGraphPresets]`), dynamically pulls column headers and rows, and packs them into a clean JSON list so the frontend can display user-saved graph axis label presets.
 
-### ➕ C. Creating Label Presets
+### C. Creating Label Presets
 * **Route:** `POST /create_labels`
 * **Libraries Used:** `Flask`, `pyodbc`
 * **Functionality:** Extracts incoming JSON data (`xlabel`, `xunit`, `ylabel`, `yunit`) submitted via a frontend form, executes a SQL `INSERT` statement into `[dbo].[GraphPresets]`, commits the transaction, and returns a `201 Created` status.
 
-### ✏️ D. Updating Label Presets
+### D. Updating Label Presets
 * **Route:** `PUT /update_label/<int:id>`
 * **Libraries Used:** `Flask`, `pyodbc`
 * **Functionality:** Captures an ID from the URL parameter along with modified JSON form inputs, then executes a parameterized SQL `UPDATE` command targeting that specific row ID in the database.
 
-### ❌ E. Deleting Label Presets
+### E. Deleting Label Presets
 * **Route:** `DELETE /delete_label/<int:id>`
 * **Libraries Used:** `Flask`, `pyodbc`
 * **Functionality:** Takes a preset ID from the endpoint URL and deletes the corresponding record from the `[dbo].[GraphPresets]` table.
 
-### 📂 F. Uploading and Processing Raw CSV Data
+### F. Uploading and Processing Raw CSV Data
 * **Route:** `POST /upload_data`
 * **Libraries Used:** `Flask`, `pandas`, `uuid`, `pyodbc`
 * **Functionality:** 
@@ -58,17 +58,17 @@ To interact with the Azure SQL database, the backend utilizes the **`pyodbc`** l
   3. Generates a unique tracking ID (**UUID**) for the upload batch.
   4. Clears out old raw data in the database and loops through every row and column, using parameterized SQL `INSERT` statements to store the dataset layout row-by-row.
 
-### 📋 G. Fetching Uploaded CSV Columns
+### G. Fetching Uploaded CSV Columns
 * **Route:** `GET /csv_table`
 * **Libraries Used:** `Flask`, `pyodbc`
 * **Functionality:** Runs a distinct SQL query (`SELECT DISTINCT ColumnName FROM RawGraphData`) to extract all unique column names from the uploaded dataset, returning them to the frontend so users can select their X and Y graphing axes.
 
-### 🔄 H. Renaming Columns
+### H. Renaming Columns
 * **Route:** `PUT /rename_column`
 * **Libraries Used:** `Flask`, `pyodbc`
 * **Functionality:** Takes an `old_name` and `new_name` via JSON and securely executes a SQL system stored procedure (`sp_rename`) to alter the underlying column name directly inside the database table schema.
 
-### 📈 I. Dynamic Graph Generation & Plotting Engine
+### I. Dynamic Graph Generation & Plotting Engine
 * **Route:** `POST /generate_graph`
 * **Libraries Used:** `Flask`, `pandas`, `matplotlib.pyplot`, `io`, `base64`, `pyodbc`
 * **Functionality:** This is the core computational engine of the application:
