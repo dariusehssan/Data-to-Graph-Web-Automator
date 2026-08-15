@@ -1,0 +1,12 @@
+## 5. Database Architecture & SQL Implementation
+The backend data storage relies on an Azure SQL database, which I configured and managed using SQL Server Management Studio (SSMS). I structured the database into two distinct tables—`dbo.GraphPresets` and `dbo.RawGraphData`, each utilising a different architectural pattern based on how the data needed to be accessed and modified.
+
+### Managing Static Data: Stored Procedures (`dbo.GraphPresets`)
+*   **Thought Process:** For saving user presets, the data structure is entirely fixed and predictable. Every preset will always have an `Id` (Primary Key), `XLabel`, `XUnit`, `YLabel`, and `YUnit`. Because this is standard relational data, I opted to write T-SQL stored procedures (such as `dbo.GetGraphPresets`) to handle data retrieval. 
+*   **The Benefit:** Delegating these queries to stored procedures keeps the backend Python code much cleaner, prevents SQL injection, and allows the SQL Server to optimize the query execution plan natively.
+
+### Managing Dynamic CSV Data: The EAV Pattern (`dbo.RawGraphData`)
+*   **Thought Process:** Handling the raw CSV uploads required a completely different approach. Engineering data is highly volatile; users can upload datasets with vastly different column counts, and the headers change constantly. 
+*   **The Problem:** If I mapped CSV headers to physical SQL schema columns dynamically, the database would quickly become a structural mess. Furthermore, SQL Server strictly enforces naming conventions, it outright rejects physical column names that begin with a numeric digit (e.g., `0 kg/h`). Attempting to force physical column renames using `sp_rename` resulted in constant 500 server errors unless I used complex, messy string-prefix workarounds on the frontend.
+*   **The Solution:** I abandoned dynamic physical columns entirely and implemented a flattened, Entity-Attribute-Value (EAV) data structure. The `dbo.RawGraphData` table consists of just a few static columns: `UploadID`, `RowIndex`, `ColumnName`, and `Value`. The user's CSV headers are simply inserted as text strings into the `ColumnName` row rather than altering the database schema. 
+*   **The Result:** Because the headers are now just row values, SQL Server's strict naming rules no longer apply. Users can rename columns to start with numbers seamlessly. When the Flask backend needs to generate a graph, it uses Pandas to query this flattened table and simply pivots the `RowIndex` and `ColumnName` back into a standard two-dimensional DataFrame for Matplotlib.
