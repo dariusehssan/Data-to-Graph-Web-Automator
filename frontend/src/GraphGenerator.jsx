@@ -4,6 +4,15 @@ import "./GraphGenerator.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://data-to-graph-web-automator.onrender.com";
 
+const getDeviceId = () => {
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+        deviceId = crypto.randomUUID(); 
+        localStorage.setItem('device_id', deviceId);
+    }
+    return deviceId;
+};
+
 const GraphGenerator = ({ selectedXAxis, selectedYAxis, selectedPresetId }) => {
     const [plotUrl, setPlotUrl] = useState("");
     const [loading, setLoading] = useState(false);
@@ -23,6 +32,7 @@ const GraphGenerator = ({ selectedXAxis, selectedYAxis, selectedPresetId }) => {
         setLoading(true);
 
         try {
+            const currentDeviceId = getDeviceId();
             const response = await axios.post(`${API_URL}/generate_graph`, {
                 x_column: selectedXAxis,
                 y_columns: selectedYAxis,
