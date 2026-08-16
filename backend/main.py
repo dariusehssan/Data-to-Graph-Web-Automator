@@ -140,11 +140,12 @@ def csv_table():
 @app.route("/rename_column", methods=["PUT"])
 def rename_column():
     data = request.get_json()
+    device_id = data.get("device_id")
     old_name = data.get("old_name")
     new_name = data.get("new_name")
     
-    if not old_name or not new_name:
-        return jsonify({"error": "Both old_name and new_name are required"}), 400
+    if not device_id or not old_name or not new_name:
+        return jsonify({"error": "Device ID, old_name, and new_name are required."}), 400
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -153,7 +154,7 @@ def rename_column():
         cursor.execute("""
             UPDATE RawGraphData 
             SET ColumnName = ? 
-            WHERE ColumnName = ?
+            WHERE ColumnName = ? AND DeviceID = ?
         """, (new_name, old_name))
         
         conn.commit()
@@ -172,12 +173,13 @@ def rename_column():
 @app.route("/generate_graph", methods=["POST"])
 def generate_graph():
     data = request.get_json()
+    device_id = data.get("device_id")
     x_column = data.get("x_column")
     y_columns = data.get("y_columns")
     preset_id = data.get("preset_id")
 
-    if not x_column or not y_columns:
-        return jsonify({"error": "Please select both X and Y axes columns."}), 400
+    if not device_id or not x_column or not y_columns:
+        return jsonify({"error": "Device ID, X, and Y axes columns are required."}), 400
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -196,7 +198,7 @@ def generate_graph():
         xlabel_text = x_column
         ylabel_text = "Values"
 
-    df_raw = pd.read_sql("SELECT RowIndex, ColumnName, Value FROM RawGraphData ORDER BY RowIndex", conn)
+    df_raw = pd.read_sql("SELECT RowIndex, ColumnName, Value FROM RawGraphData WHERE DeviceID = ? ORDER BY RowIndex", conn, params=(device_id))
     conn.close()
 
     if df_raw.empty:
