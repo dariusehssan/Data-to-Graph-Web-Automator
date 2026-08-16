@@ -28,11 +28,14 @@ def get_db_connection():
     )
     return pyodbc.connect(conn_str)
 
-@app.route("/labels", methods=["GET"])
-def get_labels():
+@app.route("/labels/<device_id>", methods=["GET"])
+def get_labels(device_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("[dbo].[GetGraphPresets]")
+    cursor.execute("""
+        SELECT id, xlabel, xunit, ylabel, yunit 
+        FROM [dbo].[GraphPresets] 
+        WHERE DeviceID = ?""", (device_id,))
     
     columns = [column[0] for column in cursor.description]
     labels = [dict(zip(columns, row)) for row in cursor.fetchall()]
@@ -47,7 +50,7 @@ def create_labels():
     cursor = conn.cursor()
     
     cursor.execute("""
-        INSERT INTO [dbo].[GraphPresets] (xlabel, xunit, ylabel, yunit)
+        INSERT INTO [dbo].[GraphPresets] (xlabel, xunit, ylabel, yunit, DeviceID)
         VALUES (?, ?, ?, ?)""", 
         (data['xlabel'], data['xunit'], data['ylabel'], data['yunit'])
     )
@@ -90,6 +93,11 @@ def upload_data():
         return jsonify({"message": "No file uploaded"}), 400
     
     file = request.files['file']
+
+    device_id = request.form.get('device_id')
+    
+    if not device_id:
+        return jsonify({"message": "Device ID missing"}), 400
     
     df = pd.read_csv(file, sep=r'[,;]', engine='python')
     df.columns = df.columns.str.strip().str.replace(' ', '_').str.replace(r'[()]', '', regex=True)
@@ -100,12 +108,12 @@ def upload_data():
     try:
         upload_id = uuid.uuid4()
         
-        cursor.execute("DELETE FROM RawGraphData")
+        cursor.execute("DELETE FROM RawGraphData WHERE DeviceID = ?", (device_id,))
 
         for index, row in df.iterrows():
             for col_name in df.columns:
                 cursor.execute("""
-                    INSERT INTO RawGraphData (UploadID, RowIndex, ColumnName, Value)
+                    INSERT INTO RawGraphData (UploadID, RowIndex, ColumnName, Value, DeviceID)
                     VALUES (?, ?, ?, ?)
                 """, (str(upload_id), index, col_name, str(row[col_name])))
         
