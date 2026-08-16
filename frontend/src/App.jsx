@@ -28,6 +28,9 @@ function App() {
     
     const handleRefresh = () => {
         setRefreshKey(prev => prev + 1);
+        setSelectedXAxis("");
+        setSelectedYAxis([]);
+        setSelectedPresetId(null);
     };
 
     useEffect(() => {
