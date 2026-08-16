@@ -125,10 +125,12 @@ def upload_data():
 
 @app.route("/csv_table", methods=["GET"])
 def csv_table():
+    device_id = request.args.get('device_id')
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT DISTINCT ColumnName FROM RawGraphData")
+    cursor.execute("SELECT DISTINCT ColumnName FROM RawGraphData WHERE DeviceID = ?", (device_id,))
     columns = [row[0] for row in cursor.fetchall()]
 
     conn.close()
