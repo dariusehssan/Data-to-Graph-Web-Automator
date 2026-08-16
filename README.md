@@ -24,3 +24,12 @@ For an in-depth look at how this project was built, please refer to the detailed
 *   **[Backend Architecture](./Guides/Backend-Architecture.md)**
 *   **[Database Architecture & SQL Implementation](./Guides/Database-Architecture.md)**
 *   **[Web Deployment Setup](./Guides/Web-Deployment-Setup.md)**
+
+## 🚀 Project Roadmap (Planned Features)
+
+As this application continues to grow, the next phase of development will focus on transitioning from a session-based tool to a fully personalized, multi-user platform. 
+
+*   **Robust User Authentication:** Implementing a secure account system with encrypted, high-security password hashing to ensure user credentials are safe.
+*   **Persistent Cloud Storage:** Allowing users to permanently save their raw CSV data, generated Matplotlib graphs, and custom axis presets directly to their personal profiles, eliminating the need to re-upload files during new sessions.
+*   **Cross-Device Synchronization:** Upgrading the architecture so users can securely log into their accounts from any desktop or mobile device and instantly access their historical data and saved projects.
+*   **Multi-Page Application Routing:** Expanding the frontend interface with dedicated routes (e.g., utilizing React Router) to create separate, intuitive pages for user dashboards, account settings, and the core graphing engine.
