@@ -4,6 +4,15 @@ import "./GraphTable.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://data-to-graph-web-automator.onrender.com";
 
+const getDeviceId = () => {
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+        deviceId = crypto.randomUUID(); 
+        localStorage.setItem('device_id', deviceId);
+    }
+    return deviceId;
+};
+
 const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelectedYAxis }) => {
     const [columns, setColumns] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -11,7 +20,10 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
     const [tempName, setTempName] = useState("");
 
     useEffect(() => {
-        axios.get(`${API_URL}/csv_table`)
+        const currentDeviceId = getDeviceId();
+        axios.get(`${API_URL}/csv_table`, {
+                params: {device_id: currentDeviceId}
+            })
             .then((res) => {
                 setColumns(res.data.columns);
                 setLoading(false);
@@ -36,12 +48,12 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
         const newNameTrimmed = tempName.trim();
 
         try {
+            const currentDeviceId = getDeviceId()
             await axios.put(`${API_URL}/rename_column`, {
                 old_name: oldName,
                 new_name: newNameTrimmed
             });
 
-            // Update columns state array directly with the clean name
             setColumns((prev) => prev.map(c => c === oldName ? newNameTrimmed : c));
 
             if (selectedXAxis === oldName) setSelectedXAxis(newNameTrimmed);
