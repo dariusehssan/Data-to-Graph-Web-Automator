@@ -3,6 +3,15 @@ import "./CSVUpload.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://data-to-graph-web-automator.onrender.com";
 
+const getDeviceId = () => {
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+        deviceId = crypto.randomUUID(); 
+        localStorage.setItem('device_id', deviceId);
+    }
+    return deviceId;
+};
+
 const CSVUpload = ({ uploadCallback }) => {
     const [file, setFile] = useState(null);
     const [message, setMessage] = useState("");
@@ -20,7 +29,10 @@ const CSVUpload = ({ uploadCallback }) => {
 
         const formData = new FormData();
         formData.append("file", file);
-
+        
+        const currentDeviceId = getDeviceId();
+        formData.append("device_id", currentDeviceId);
+        
         const response = await fetch(`${API_URL}/upload_data`, {
             method: "POST",
             body: formData,
