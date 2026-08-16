@@ -32,10 +32,8 @@ def get_db_connection():
 def get_labels(device_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT id, xlabel, xunit, ylabel, yunit 
-        FROM [dbo].[GraphPresets] 
-        WHERE DeviceID = ?""", (device_id,))
+    
+    cursor.execute("EXEC [dbo].[GetGraphPresets] @DeviceID = ?", (device_id,))
     
     columns = [column[0] for column in cursor.description]
     labels = [dict(zip(columns, row)) for row in cursor.fetchall()]
@@ -50,14 +48,14 @@ def create_labels():
     cursor = conn.cursor()
     
     cursor.execute("""
-        INSERT INTO [dbo].[GraphPresets] (xlabel, xunit, ylabel, yunit, DeviceID)
-        VALUES (?, ?, ?, ?)""", 
-        (data['xlabel'], data['xunit'], data['ylabel'], data['yunit'])
+        EXEC [dbo].[CreateGraphPreset] 
+        @xlabel = ?, @xunit = ?, @ylabel = ?, @yunit = ?, @DeviceID = ?""", 
+        (data['xlabel'], data['xunit'], data['ylabel'], data['yunit'], data.get('device_id'))
     )
     
     conn.commit()
     conn.close()
-    return jsonify({"message": "User created!"}), 201
+    return jsonify({"message": "Label created!"}), 201
 
 @app.route("/update_label/<int:id>", methods=["PUT"])
 def update_label(id):
@@ -66,10 +64,9 @@ def update_label(id):
     cursor = conn.cursor()
     
     cursor.execute("""
-        UPDATE [dbo].[GraphPresets]
-        SET xlabel = ?, xunit = ?, ylabel = ?, yunit = ?
-        WHERE id = ?""",
-        (data['xlabel'], data['xunit'], data['ylabel'], data['yunit'], id)
+        EXEC [dbo].[UpdateGraphPreset] 
+        @id = ?, @xlabel = ?, @xunit = ?, @ylabel = ?, @yunit = ?""",
+        (id, data['xlabel'], data['xunit'], data['ylabel'], data['yunit'])
     )
     
     conn.commit()
@@ -81,7 +78,7 @@ def delete_label(id):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("DELETE FROM [dbo].[GraphPresets] WHERE id = ?", (id,))
+    cursor.execute("EXEC [dbo].[DeleteGraphPreset] @id = ?", (id,))
     
     conn.commit()
     conn.close()
@@ -108,14 +105,14 @@ def upload_data():
     try:
         upload_id = uuid.uuid4()
         
-        cursor.execute("DELETE FROM RawGraphData WHERE DeviceID = ?", (device_id,))
+        cursor.execute("EXEC [dbo].[ClearDeviceRawData] @DeviceID = ?", (device_id,))
 
         for index, row in df.iterrows():
             for col_name in df.columns:
                 cursor.execute("""
-                    INSERT INTO RawGraphData (UploadID, RowIndex, ColumnName, Value, DeviceID)
-                    VALUES (?, ?, ?, ?)
-                """, (str(upload_id), index, col_name, str(row[col_name])))
+                    EXEC [dbo].[InsertRawData] 
+                    @UploadID = ?, @RowIndex = ?, @ColumnName = ?, @Value = ?, @DeviceID = ?
+                """, (str(upload_id), index, col_name, str(row[col_name]), device_id))
         
         conn.commit()
         return jsonify({"message": "CSV data successfully saved!", "upload_id": str(upload_id)}), 201
