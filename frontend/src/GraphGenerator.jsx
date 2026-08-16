@@ -36,7 +36,7 @@ const GraphGenerator = ({ selectedXAxis, selectedYAxis, selectedPresetId }) => {
             const response = await axios.post(`${API_URL}/generate_graph`, {
                 x_column: selectedXAxis,
                 y_columns: selectedYAxis,
-                preset_id: selectedPresetId || null
+                preset_id: selectedPresetId || null,
                 device_id: currentDeviceId
             });
 
