@@ -8,6 +8,15 @@ import "./App.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://data-to-graph-web-automator.onrender.com";
 
+const getDeviceId = () => {
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+        deviceId = crypto.randomUUID(); 
+        localStorage.setItem('device_id', deviceId);
+    }
+    return deviceId;
+};
+
 function App() {
     const [labels, setLabels] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,7 +38,8 @@ function App() {
     }, []);
 
     const fetchLabels = async () => {
-        const response = await fetch(`${API_URL}/labels`);
+        const currentDeviceId = getDeviceId();
+        const response = await fetch(`${API_URL}/labels/${currentDeviceId}`);
         const data = await response.json();
         setLabels(data.labels);
     };
