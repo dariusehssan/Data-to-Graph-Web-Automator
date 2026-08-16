@@ -37,6 +37,7 @@ const GraphGenerator = ({ selectedXAxis, selectedYAxis, selectedPresetId }) => {
                 x_column: selectedXAxis,
                 y_columns: selectedYAxis,
                 preset_id: selectedPresetId || null
+                device_id: currentDeviceId
             });
 
             setPlotUrl(response.data.plot);
