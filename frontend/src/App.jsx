@@ -17,6 +17,9 @@ function App() {
     const [selectedYAxis, setSelectedYAxis] = useState([]);
     const [selectedPresetId, setSelectedPresetId] = useState(null);
 
+    const currentDeviceId = getDeviceId();
+    const response = await fetch(`${API_URL}/labels/${currentDeviceId}`);
+    
     const handleRefresh = () => {
         setRefreshKey(prev => prev + 1);
     };
