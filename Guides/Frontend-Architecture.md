@@ -1,5 +1,4 @@
 # Frontend Architecture & Development 
-**Data-to-Graph Web Automator**
 
 ## 1. Overview and Tech Stack
 The frontend of the Data-to-Graph Web Automator was built using React.js and Vite to provide a fast, responsive, and highly interactive user experience. The primary goal of the interface is to bridge the gap between raw CSV data and customizable engineering graphs, allowing users to seamlessly manipulate data structures, manage graph label presets, and generate Matplotlib plots directly in the browser. 
