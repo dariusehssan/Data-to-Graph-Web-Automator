@@ -13,7 +13,7 @@ const getDeviceId = () => {
     return deviceId;
 };
 
-const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelectedYAxis }) => {
+const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelectedYAxis, refreshTrigger}) => {
     const [columns, setColumns] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editingCol, setEditingCol] = useState(null);
@@ -32,7 +32,7 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
                 console.error("Error fetching columns:", err);
                 setLoading(false);
             });
-    }, []);
+    }, [refreshTrigger]);
 
     const handleStartEdit = (colName) => {
         setEditingCol(colName);
