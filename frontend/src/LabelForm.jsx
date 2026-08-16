@@ -3,6 +3,15 @@ import "./Labels.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://data-to-graph-web-automator.onrender.com";
 
+const getDeviceId = () => {
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+        deviceId = crypto.randomUUID(); 
+        localStorage.setItem('device_id', deviceId);
+    }
+    return deviceId;
+};
+
 const LabelForm = ({ existingLabel = {}, updateCallback }) => {
     const [xlabel, setXLabel] = useState(existingLabel.XLabel || "");
     const [xunit, setXUnit] = useState(existingLabel.XUnit || "");
@@ -14,7 +23,8 @@ const LabelForm = ({ existingLabel = {}, updateCallback }) => {
     const onSubmit = async (e) => {
         e.preventDefault();
 
-        const data = { xlabel, xunit, ylabel, yunit };
+        const currentDeviceId = getDeviceId();
+        const data = { xlabel, xunit, ylabel, yunit, device_id: currentDeviceId};
         const url = `${API_URL}/` + (updating ? `update_label/${existingLabel.Id}` : "create_labels");
         const options = {
             method: updating ? "PUT" : "POST",
