@@ -52,6 +52,7 @@ const GraphTable = ({ selectedXAxis, setSelectedXAxis, selectedYAxis, setSelecte
             await axios.put(`${API_URL}/rename_column`, {
                 old_name: oldName,
                 new_name: newNameTrimmed
+                device_id: currentDeviceId
             });
 
             setColumns((prev) => prev.map(c => c === oldName ? newNameTrimmed : c));
