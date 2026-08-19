@@ -157,7 +157,7 @@ def rename_column():
             UPDATE RawGraphData 
             SET ColumnName = ? 
             WHERE ColumnName = ? AND DeviceID = ?
-        """, (new_name, old_name))
+        """, (new_name, old_name, device_id))
         
         conn.commit()
     except Exception as e:
