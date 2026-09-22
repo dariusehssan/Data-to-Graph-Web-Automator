@@ -6,14 +6,15 @@ import base64
 import pyodbc
 
 def get_db_connection():
+    db_user = os.environ.get("DB_USER")
+    db_password = os.environ.get("DB_PASSWORD")
+    
     conn_str = (
-        "Driver={ODBC Driver 18 for SQL Server}";
-        "Server=tcp:dariusehssan1.database.windows.net,1433";
-        "Database=datatograph_db";
-        "Uid=dariusehssan";
-        "Pwd=DariusDataGraph!";
-        "Encrypt=yes";
-        "TrustServerCertificate=yes"
+        "Driver={ODBC Driver 18 for SQL Server};"
+        "Server=tcp:dariusehssan1.database.windows.net,1433;"
+        "Database=datatograph_db;"
+        f"Uid={db_user};"
+        f"Pwd={db_password};"
     )
     return pyodbc.connect(conn_str)
 
