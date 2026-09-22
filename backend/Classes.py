@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import io
 import base64
 import pyodbc
+import os
 
 def get_db_connection():
     db_user = os.environ.get("DB_USER")
