@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pyodbc
-import os
 from Classes import DBConnectionManager, GraphPreset, DataUploader, GraphBuilder
 
 app = Flask(__name__)
