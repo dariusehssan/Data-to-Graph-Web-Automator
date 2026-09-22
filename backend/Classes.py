@@ -8,7 +8,7 @@ import pyodbc
 def get_db_connection():
     conn_str = (
         "Driver={ODBC Driver 18 for SQL Server}";
-        "Server=tcp:dariusehssan1.database.windows.net,1433";
+        "Server=tcp:dariusehssan1.database.windows.net,1433";
         "Database=datatograph_db";
         "Uid=dariusehssan";
         "Pwd=DariusDataGraph!";
