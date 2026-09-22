@@ -7,11 +7,14 @@ import pyodbc
 
 def get_db_connection():
     conn_str = (
-        "Driver={SQL Server};"
-        "Server=DESKTOP-1ABH03L\SQLEXPRESS;" #DESKTOP-1ABH03L\SQLEXPRESS   (localdb)\\MSSQLLocalDB
-        "Database=GraphProjectDB;"
-        "Trusted_Connection=yes;"
-        "TrustServerCertificate=yes;"
+        "Driver={ODBC Driver 18 for SQL Server}";
+        "Server=tcp:dariusehssan1.database.windows.net,1433";
+        "Database=datatograph_db";
+        "Uid=dariusehssan";
+        "Pwd=DariusDataGraph!";
+        "Encrypt=yes";
+        "TrustServerCertificate=no";
+        "Connection Timeout=30";
     )
     return pyodbc.connect(conn_str)
 
