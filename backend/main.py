@@ -1,12 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pyodbc
-import pandas as pd
-import uuid
-import io
-import base64
-import matplotlib.pyplot as plt
 import os
+from Classes import DBConnectionManager, GraphPreset, DataUploader, GraphBuilder
 
 app = Flask(__name__)
 CORS(app)
@@ -15,73 +11,52 @@ CORS(app)
 def home():
     return {"status": "Backend is running successfully!"}
 
-def get_db_connection():
-    conn_str = (
-        "Driver={ODBC Driver 18 for SQL Server};"
-        "Server=tcp:dariusehssan1.database.windows.net,1433;"
-        "Database=datatograph_db;"
-        "Uid=dariusehssan;"
-        "Pwd=DariusDataGraph!;"
-        "Encrypt=yes;"
-        "TrustServerCertificate=no;"
-        "Connection Timeout=30;"
-    )
-    return pyodbc.connect(conn_str)
-
 @app.route("/labels/<device_id>", methods=["GET"])
 def get_labels(device_id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
     
-    cursor.execute("EXEC [dbo].[GetGraphPresets] @DeviceID = ?", (device_id,))
-    
-    columns = [column[0] for column in cursor.description]
-    labels = [dict(zip(columns, row)) for row in cursor.fetchall()]
-    
-    conn.close()
+    labels = GraphPreset.get_by_device(device_id)
+
     return jsonify({"labels": labels})
 
 @app.route("/create_labels", methods=["POST"])
 def create_labels():
     data = request.json
-    conn = get_db_connection()
-    cursor = conn.cursor()
     
-    cursor.execute("""
-        EXEC [dbo].[CreateGraphPreset] 
-        @xlabel = ?, @xunit = ?, @ylabel = ?, @yunit = ?, @DeviceID = ?""", 
-        (data['xlabel'], data['xunit'], data['ylabel'], data['yunit'], data.get('device_id'))
+    create_preset = GraphPreset(
+        xlabel = data['xlabel'],
+        xunit = data['xunit'],
+        ylabel = data['ylabel'],
+        yunit = data['yunit'],
+        device_id = data.get('device_id')
     )
-    
-    conn.commit()
-    conn.close()
+
+    create_preset.create()
+
     return jsonify({"message": "Label created!"}), 201
 
 @app.route("/update_label/<int:id>", methods=["PUT"])
 def update_label(id):
     data = request.json
-    conn = get_db_connection()
-    cursor = conn.cursor()
+
+    update_preset = GraphPreset(
+        xlabel = data['xlabel'],
+        xunit = data['xunit'],
+        ylabel = data['ylabel'],
+        yunit = data['yunit'],
+        id = id
+        )
+
+    update_preset.update_label()
     
-    cursor.execute("""
-        EXEC [dbo].[UpdateGraphPreset] 
-        @id = ?, @xlabel = ?, @xunit = ?, @ylabel = ?, @yunit = ?""",
-        (id, data['xlabel'], data['xunit'], data['ylabel'], data['yunit'])
-    )
-    
-    conn.commit()
-    conn.close()
     return jsonify({"message": "Label preset updated!"}), 200
 
 @app.route("/delete_label/<int:id>", methods=["DELETE"])
 def delete_label(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
     
-    cursor.execute("EXEC [dbo].[DeleteGraphPreset] @id = ?", (id,))
-    
-    conn.commit()
-    conn.close()
+    delete_preset = GraphPreset(None, None, None, None, None, id = id)
+
+    delete_preset.delete()
+
     return jsonify({"message": "Label preset deleted!"}), 200
 
 @app.route("/upload_data", methods=["POST"])
@@ -89,55 +64,31 @@ def upload_data():
     if 'file' not in request.files:
         return jsonify({"message": "No file uploaded"}), 400
     
-    file = request.files['file']
-
     device_id = request.form.get('device_id')
-    
     if not device_id:
         return jsonify({"message": "Device ID missing"}), 400
     
-    df = pd.read_csv(file, sep=r'[,;]', engine='python')
-    df.columns = df.columns.str.strip().str.replace(' ', '_').str.replace(r'[()]', '', regex=True)
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
     try:
-        upload_id = uuid.uuid4()
+        uploader = DataUploader(request.files['file'], device_id)
         
-        cursor.execute("EXEC [dbo].[ClearDeviceRawData] @DeviceID = ?", (device_id,))
-
-        for index, row in df.iterrows():
-            for col_name in df.columns:
-                cursor.execute("""
-                    EXEC [dbo].[InsertRawData] 
-                    @UploadID = ?, @RowIndex = ?, @ColumnName = ?, @Value = ?, @DeviceID = ?
-                """, (str(upload_id), index, col_name, str(row[col_name]), device_id))
+        uploader.clean_data()
+        uploader.save()
         
-        conn.commit()
-        return jsonify({"message": "CSV data successfully saved!", "upload_id": str(upload_id)}), 201
+        return jsonify({
+            "message": "CSV data successfully saved!", 
+            "upload_id": str(uploader.upload_id)
+        }), 201
         
     except Exception as e:
-        conn.rollback()
         return jsonify({"message": f"Error: {str(e)}"}), 500
-    finally:
-        conn.close()
 
 @app.route("/csv_table", methods=["GET"])
 def csv_table():
     device_id = request.args.get('device_id')
     
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute("SELECT DISTINCT ColumnName FROM RawGraphData WHERE DeviceID = ?", (device_id,))
-    columns = [row[0] for row in cursor.fetchall()]
-
-    conn.close()
-
-    return jsonify({
-        "columns": columns
-    }), 200
+    columns = GraphPreset.get_csv_table(device_id)
+        
+    return jsonify({"columns": columns}), 200
 
 @app.route("/rename_column", methods=["PUT"])
 def rename_column():
@@ -149,94 +100,40 @@ def rename_column():
     if not device_id or not old_name or not new_name:
         return jsonify({"error": "Device ID, old_name, and new_name are required."}), 400
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     try:
-        cursor.execute("""
-            UPDATE RawGraphData 
-            SET ColumnName = ? 
-            WHERE ColumnName = ? AND DeviceID = ?
-        """, (new_name, old_name, device_id))
-        
-        conn.commit()
+        with DBConnectionManager() as cursor:
+            cursor.execute("""
+                UPDATE RawGraphData 
+                SET ColumnName = ? 
+                WHERE ColumnName = ? AND DeviceID = ?
+            """, (new_name, old_name, device_id))
+            
+        return jsonify({
+            "message": f"Column successfully renamed!",
+            "saved_name": new_name
+        }), 200
     except Exception as e:
-        conn.close()
         return jsonify({"error": str(e)}), 500
-
-    conn.close()
-
-    return jsonify({
-        "message": f"Column successfully renamed!",
-        "saved_name": new_name
-    }), 200
-
 
 @app.route("/generate_graph", methods=["POST"])
 def generate_graph():
     data = request.get_json()
-    device_id = data.get("device_id")
-    x_column = data.get("x_column")
-    y_columns = data.get("y_columns")
-    preset_id = data.get("preset_id")
-
-    if not device_id or not x_column or not y_columns:
+    
+    if not data.get("device_id") or not data.get("x_column") or not data.get("y_columns"):
         return jsonify({"error": "Device ID, X, and Y axes columns are required."}), 400
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    preset = GraphPreset.get_by_id(data.get("preset_id"))
     
-    cursor.execute("""
-        SELECT xlabel, xunit, ylabel, yunit 
-        FROM GraphPresets 
-        WHERE id = ?
-    """, (preset_id,))
-    preset = cursor.fetchone()
-
-    if preset:
-        xlabel_text = f"{preset[0]} / {preset[1]}"
-        ylabel_text = f"{preset[2]} / {preset[3]}"
-    else:
-        xlabel_text = x_column
-        ylabel_text = "Values"
-
-    df_raw = pd.read_sql("SELECT RowIndex, ColumnName, Value FROM RawGraphData WHERE DeviceID = ? ORDER BY RowIndex", conn, params=(device_id))
-    conn.close()
-
-    if df_raw.empty:
-        return jsonify({"error": "No data found in database."}), 400
-
-    df = df_raw.pivot(index="RowIndex", columns="ColumnName", values="Value")
-
-    if isinstance(y_columns, str): 
-        y_columns = [y_columns]
-
-    missing_cols = [col for col in y_columns + [x_column] if col not in df.columns]
-    if missing_cols:
-        return jsonify({"error": f"Missing columns in data: {missing_cols}"}), 400
-
-    fig, ax = plt.subplots(figsize=(8, 5))
-
-    for y_col in y_columns:
-        x_vals = df[x_column]
-        y_vals = pd.to_numeric(df[y_col], errors='coerce')
+    builder = GraphBuilder(data['device_id'], data['x_column'], data['y_columns'], preset)
+    
+    try:
+        builder.fetch_data()
+        plot_url = builder.build_image()
         
-        ax.plot(x_vals, y_vals, label=y_col, marker='o', markersize=3)
-
-    ax.set_xlabel(xlabel_text)
-    ax.set_ylabel(ylabel_text)
-    ax.legend()
-    ax.grid(True)
-
-    img_io = io.BytesIO()
-    plt.savefig(img_io, format='png', bbox_inches='tight')
-    img_io.seek(0)
-    plot_url = base64.b64encode(img_io.getvalue()).decode('utf8')
-    plt.close(fig)
-
-    return jsonify({
-        "plot": f"data:image/png;base64,{plot_url}"
-    }), 200
+        return jsonify({"plot": f"data:image/png;base64,{plot_url}"}), 200
+        
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
