@@ -13,8 +13,7 @@ def get_db_connection():
         "Uid=dariusehssan";
         "Pwd=DariusDataGraph!";
         "Encrypt=yes";
-        "TrustServerCertificate=no";
-        "Connection Timeout=30";
+        "TrustServerCertificate=yes"
     )
     return pyodbc.connect(conn_str)
 
